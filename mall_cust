@@ -1,0 +1,47 @@
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from scipy.spatial.distance import euclidean
+from itertools import combinations
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("Mall_Customers.csv", index_col = "CustomerID")
+
+df = df.drop(["Gender"], axis= 1)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df)
+
+inertia = []
+K_range = range(1, 11)
+
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    inertia.append(kmeans.inertia_)
+
+# Plot Elbow
+plt.plot(K_range, inertia, marker='o')
+plt.xlabel('Number of Clusters (k)')
+plt.ylabel('Inertia (WCSS)')
+plt.title('Elbow Method for Optimal k')
+plt.grid(True)
+plt.show()
+
+
+
+kmeans1 = KMeans(n_clusters = 4)
+cluster_labels = kmeans1.fit_predict(df)
+df["cluster"] = cluster_labels
+grouped = df.groupby("cluster")
+print("Number of customers per cluster")
+
+for cluster, group in grouped:
+    print(f"\nCluster {cluster}:")
+    sample_customers = group.sample(n = 5).index
+    for customer in sample_customers:
+        print(customer)
+
+#looping through for each pairs of clusters to find the euclidean distance
+for a, b in combinations(range(len(kmeans1.cluster_centers_)), 2) :
+    distant = euclidean( kmeans.cluster_centers_[a],  kmeans.cluster_centers_[b])
+    print(f"Distance between cluster{a} and cluster {b} is {distant: 4f}")
